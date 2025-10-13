@@ -86,12 +86,60 @@ def depthFirstSearch(problem: SearchProblem):
     print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
+    print("Start:", problem.getStartState())
     "*** YOUR CODE HERE ***"
     util.raiseNotDefined()
 
 def breadthFirstSearch(problem: SearchProblem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
+    from util import Queue
+
+
+
+    print("Start:", problem.getStartState())
+    print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
+    print("Start's successors:", problem.getSuccessors(problem.getStartState()))
+
+    """check if the start state is the goal state"""
+    startState = problem.getStartState()
+    if problem.isGoalState(startState):
+        print("The Start State is the end state - somehow")
+        return [] # is done if somehow the start state is also the end state
+
+    Que = Queue() # Empty FIFO queue
+    Que.push(startState)
+
+    visited = {startState}
+
+    # To keep track of what has been explored
+    parent = {
+        startState: (None, None) # (startState is the key : --> (previous state, action to reach state))
+    } #
+
+    # The Main BFS logic loop: Keep expanding until no states remain in the Queue
+    while not Que.isEmpty():
+        currentState = Que.pop() # (set of nodes we've discovered but haven't expanded yet) Q.pop() --> expand a state and remove it from the Que
+
+        if problem.isGoalState(currentState): # if this state is the goal
+            actions = [] # list of actions taken to get to goal state
+            current = currentState
+            while parent[current][0] is not None:
+                prev, act = parent[current] # unpack ( previous state, action taken)
+                actions.append(act)
+                current = prev
+            actions.reverse()
+            return actions
+
+
+        # Successor puzzle, the next action i.e. 'down' 'left' ect, and cost step (always 1) is returned from problem.getSuccessorss(currentState)
+        for (Successor, action, stepCost) in problem.getSuccessors(currentState):
+            if Successor not in visited:
+                visited.add(Successor)
+                parent[Successor] = (currentState, action)
+                Que.push(Successor)
+    return []
+
     util.raiseNotDefined()
 
 def uniformCostSearch(problem: SearchProblem):
