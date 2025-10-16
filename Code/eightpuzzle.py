@@ -267,14 +267,15 @@ if __name__ == '__main__':
     print(puzzle)
 
     problem = EightPuzzleSearchProblem(puzzle)
-    path = search.breadthFirstSearch(problem)
+    path = search.depthFirstSearch(problem)
     print('BFS found a path of %d moves: %s' % (len(path), str(path)))
     curr = puzzle
+
     i = 1
     for a in path:
         curr = curr.result(a)
         print('After %d move%s: %s' % (i, ("", "s")[i>1], a))
-        print(curr)
+        #print(curr)
 
-        input("Press return for the next state...")   # wait for key stroke
+        #input("Press return for the next state...")   # wait for key stroke
         i += 1
