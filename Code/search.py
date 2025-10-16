@@ -145,6 +145,56 @@ def breadthFirstSearch(problem: SearchProblem):
 def uniformCostSearch(problem: SearchProblem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
+
+    from util import PriorityQueue
+
+    print("Start:", problem.getStartState())
+    print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
+    print("Start's successors:", problem.getSuccessors(problem.getStartState()))
+
+    """check if the start state is the goal state"""
+    startState = problem.getStartState()
+    if problem.isGoalState(startState):
+        print("The Start State is the end state - somehow")
+        return []  # is done if somehow the start state is also the end state
+
+    priorityQueue = PriorityQueue()  # Empty Pripority queue
+    priorityQueue.push(startState, 1)
+
+    visited = {startState}
+
+    # To keep track of what has been explored
+    parent = {
+        startState: (None, None, None)  # (startState is the key : --> (previous state, action to reach state))
+    }  #
+
+    # The Main BFS logic loop: Keep expanding until no states remain in the Queue
+    while not priorityQueue.isEmpty():
+        currentState = priorityQueue.pop()  # (set of nodes we've discovered but haven't expanded yet) Q.pop() --> expand a state and remove it from the Que
+
+        if problem.isGoalState(currentState):  # if this state is the goal
+            actions = []  # list of actions taken to get to goal state
+            current = currentState
+            while parent[current][0] is not None:
+                prev, act, stepCst = parent[current]  # unpack ( previous state, action taken, stepCost)
+                actions.append(act)
+                current = prev
+            actions.reverse()
+            return actions
+
+        # Successor puzzle, the next action i.e. 'down' 'left' ect, and cost step (always 1) is returned from problem.getSuccessorss(currentState)
+        for (Successor, action, stepCost) in problem.getSuccessors(currentState):
+            if Successor not in visited:
+                visited.add(Successor)
+                parent[Successor] = (currentState, action, stepCost)
+                priorityQueue.push(Successor, stepCost)
+    return []
+
+
+
+
+
+
     util.raiseNotDefined()
 
 def nullHeuristic(state, problem=None):
