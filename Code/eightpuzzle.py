@@ -77,12 +77,11 @@ class EightPuzzleState:
         >>> EightPuzzleState([1, 0, 2, 3, 4, 5, 6, 7, 8]).isGoal()
         False
         """
-        current = 0
+        goal = [[1,2,3],[8,0,4],[7,6,5]]
         for row in range( 3 ):
             for col in range( 3 ):
-                if current != self.cells[row][col]:
+                if goal[row][col] != self.cells[row][col]:
                     return False
-                current += 1
         return True
 
     def legalMoves( self ):
@@ -256,7 +255,7 @@ def createRandomEightPuzzle(moves=100):
       a series of 'moves' random moves to a solved
       puzzle.
     """
-    puzzle = EightPuzzleState([0,1,2,3,4,5,6,7,8])
+    puzzle = EightPuzzleState([1,2,3,8,0,4,7,6,5])
     for i in range(moves):
         # Execute a random legal move
         puzzle = puzzle.result(random.sample(puzzle.legalMoves(), 1)[0])
