@@ -14,6 +14,7 @@
 
 import search
 import random
+import time
 
 # Module Classes
 
@@ -266,8 +267,16 @@ if __name__ == '__main__':
     print(puzzle)
 
     problem = EightPuzzleSearchProblem(puzzle)
-    path = search.greedyBestFirstSearch(problem, search.getMissplacedHeuristic)
-    print('GBFS found a path of %d moves: %s' % (len(path), str(path)))
+    start = time.time()
+    path, cost, depth, numExpanded = search.depthFirstSearch(problem)
+    end = time.time()
+    timeTaken = end - start
+
+    print('IDS found a path of %d moves: %s' % (len(path), str(path)))
+    print('Path cost is ' + str(cost))
+    print('Depth of goal is ' + str(depth))
+    print('Number of nodes expanded is ' + str(numExpanded))
+    print('Time taken: ' + str(timeTaken))
     curr = puzzle
     i = 1
     for a in path:
