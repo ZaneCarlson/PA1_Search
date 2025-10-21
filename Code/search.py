@@ -18,6 +18,8 @@ Pacman agents (in searchAgents.py).
 """
 
 import util
+from Code.util import manhattanDistance
+
 
 class SearchProblem:
     """
@@ -250,6 +252,63 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
+
+    """check if the start state is the goal state"""
+    startState = problem.getStartState()
+    if problem.isGoalState(startState):
+        print("The Start State is the end state - somehow")
+        return []  # is done if somehow the start state is also the end state
+
+    priorityQueue = PriocfrityQueue()  # Empty Pripority queue
+    priorityQueue.push(startState, 1)
+
+    visited = {startState}
+
+    # To keep track of what has been explored
+    parent = {
+        startState: (None, None, None)  # (startState is the key : --> (previous state, action to reach state))
+    }  #
+
+    # The Main BFS logic loop: Keep expanding until no states remain in the Queue
+    while not priorityQueue.isEmpty():
+        currentState = priorityQueue.pop()  # (set of nodes we've discovered but haven't expanded yet) Q.pop() --> expand a state and remove it from the Que
+
+        if problem.isGoalState(currentState):  # if this state is the goal
+            actions = []  # list of actions taken to get to goal state
+            current = currentState
+            while parent[current][0] is not None:
+                prev, act, stepCst = parent[current]  # unpack ( previous state, action taken, stepCost)
+                actions.append(act)
+                current = prev
+            actions.reverse()
+            return actions
+
+        # Successor puzzle, the next action i.e. 'down' 'left' ect, and cost step (always 1) is returned from problem.getSuccessorss(currentState)
+        for (Successor, action, stepCost) in problem.getSuccessors(currentState):
+            if Successor not in visited:
+                visited.add(Successor)
+                parent[Successor] = (currentState, action, stepCost)
+                priorityQueue.push(Successor, stepCost)
+    return []
+
+
+
+    #Helper function
+    def getHeuristic(state, problem=None):
+        goal = [[1,2,3,],[8,0,4],[7,6,5]]
+        goal_position = {goal[row][column]: (row, column) for row in range (3) for column in range (3)}
+
+        total = 0
+        for row in range(3):
+            for column in range (3):
+                tile = state.cells[row][column]
+                if tile != 0:
+                    total = total + manhattanDistance((row, column), goal_position[tile])
+
+
+
+    problem.isGoalState()
+
     util.raiseNotDefined()
 
 
