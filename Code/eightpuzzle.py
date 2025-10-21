@@ -262,13 +262,12 @@ def createRandomEightPuzzle(moves=100):
     return puzzle
 
 if __name__ == '__main__':
-    puzzle = createRandomEightPuzzle(25)
-    print('A random puzzle:')
+    puzzle = EightPuzzleState([0,2,3,1,4,5,8,7,6])
     print(puzzle)
 
     problem = EightPuzzleSearchProblem(puzzle)
-    path = search.iterativeDeepeningSearch(problem)
-    print('IDS found a path of %d moves: %s' % (len(path), str(path)))
+    path = search.greedyBestFirstSearch(problem, search.getMissplacedHeuristic)
+    print('GBFS found a path of %d moves: %s' % (len(path), str(path)))
     curr = puzzle
     i = 1
     for a in path:

@@ -250,43 +250,37 @@ def uniformCostSearch(problem: SearchProblem):
         return []  # is done if somehow the start state is also the end state
 
     priorityQueue = PriorityQueue()  # Empty Pripority queue
-    priorityQueue.push(startState, 1)
-
-    visited = {startState}
+    priorityQueue.push((startState, 0), 0)
 
     # To keep track of what has been explored
     parent = {
-        startState: (None, None, None)  # (startState is the key : --> (previous state, action to reach state))
-    }  #
+        startState: (None, None)  # (startState is the key : --> (previous state, action to reach state))
+    } 
+    costSoFar = {
+        startState: 0
+    }
 
     # The Main BFS logic loop: Keep expanding until no states remain in the Queue
     while not priorityQueue.isEmpty():
-        currentState = priorityQueue.pop()  # (set of nodes we've discovered but haven't expanded yet) Q.pop() --> expand a state and remove it from the Que
+        currentState, currentCost = priorityQueue.pop()  # (set of nodes we've discovered but haven't expanded yet) Q.pop() --> expand a state and remove it from the Que
 
         if problem.isGoalState(currentState):  # if this state is the goal
             actions = []  # list of actions taken to get to goal state
-            current = currentState
-            while parent[current][0] is not None:
-                prev, act, stepCst = parent[current]  # unpack ( previous state, action taken, stepCost)
+            while parent[currentState][0] is not None:
+                prev, act = parent[currentState]  # unpack ( previous state, action taken, stepCost)
                 actions.append(act)
-                current = prev
+                currentState = prev
             actions.reverse()
             return actions
 
         # Successor puzzle, the next action i.e. 'down' 'left' ect, and cost step (always 1) is returned from problem.getSuccessorss(currentState)
         for (Successor, action, stepCost) in problem.getSuccessors(currentState):
-            if Successor not in visited:
-                visited.add(Successor)
-                parent[Successor] = (currentState, action, stepCost)
-                priorityQueue.push(Successor, stepCost)
+            newCost = currentCost + stepCost
+            if Successor not in costSoFar or newCost< costSoFar[Successor]:
+                costSoFar[Successor] = newCost
+                parent[Successor] = (currentState, action)
+                priorityQueue.push((Successor, newCost), newCost)
     return []
-
-
-
-
-
-
-    util.raiseNotDefined()
 
 def nullHeuristic(state, problem=None):
     """
@@ -294,6 +288,50 @@ def nullHeuristic(state, problem=None):
     goal in the provided SearchProblem.  This heuristic is trivial.
     """
     return 0
+
+def greedyBestFirstSearch(problem: SearchProblem, heuristic=nullHeuristic):
+    from util import PriorityQueue
+
+    startState = problem.getStartState()
+    if problem.isGoalState(startState):
+        print("The Start State is the end state - somehow")
+        return []  # is done if somehow the start state is also the end state
+
+    priorityQueue = PriorityQueue()
+    priorityQueue.push(startState, heuristic(startState, problem))
+
+    visited = set()
+
+    parent = {
+        startState: (None, None)  # (startState is the key : --> (previous state, action to reach state))
+    }
+
+    while not priorityQueue.isEmpty():
+        currentState = priorityQueue.pop()
+
+        if currentState in visited:
+            continue
+        visited.add(currentState)
+
+        if problem.isGoalState(currentState):  # if this state is the goal
+            actions = []  # list of actions taken to get to goal state
+            while parent[currentState][0] is not None:
+                prev, act = parent[currentState]  # unpack ( previous state, action taken, stepCost)
+                actions.append(act)
+                currentState = prev
+            actions.reverse()
+            return actions
+
+                # Successor puzzle, the next action i.e. 'down' 'left' ect, and cost step (always 1) is returned from problem.getSuccessorss(currentState)
+        for (Successor, action, stepCost) in problem.getSuccessors(currentState):
+            if Successor not in visited:
+                parent[Successor] = (currentState, action)
+                priorityQueue.push(Successor, heuristic(Successor, problem))
+
+    return []
+
+
+
 
 def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
@@ -341,21 +379,19 @@ def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
 
 
 
-    #Helper function
-    def getMissplacedHeuristic(state, problem=None):
-        goal = [[1,2,3,],[8,0,4],[7,6,5]]
+#Helper function
+def getMissplacedHeuristic(state, problem=None):
+    goal = [[1,2,3,],
+            [8,0,4],
+            [7,6,5]]
 
-        numMisplaced = 9
-        for row in range(3):
-            for column in range (3):
-                if  goal[row][column] == state.cells[row][column]:
-                    numMisplaced = numMisplaced - 1
-        return numMisplaced
-
-
-    problem.isGoalState()
-
-    util.raiseNotDefined()
+    numMisplaced = 0
+    for row in range(3):
+        for column in range(3):
+            value = state.cells[row][column]
+            if value != 0 and value != goal[row][column]:
+                numMisplaced += 1
+    return numMisplaced
 
 
 # Abbreviations
