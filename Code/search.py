@@ -253,13 +253,15 @@ def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
 
+    from util import PriorityQueue
+
     """check if the start state is the goal state"""
     startState = problem.getStartState()
     if problem.isGoalState(startState):
         print("The Start State is the end state - somehow")
         return []  # is done if somehow the start state is also the end state
 
-    priorityQueue = PriocfrityQueue()  # Empty Pripority queue
+    priorityQueue = PriorityQueue()  # Empty Pripority queue
     priorityQueue.push(startState, 1)
 
     visited = {startState}
@@ -294,17 +296,15 @@ def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
 
 
     #Helper function
-    def getHeuristic(state, problem=None):
+    def getMissplacedHeuristic(state, problem=None):
         goal = [[1,2,3,],[8,0,4],[7,6,5]]
-        goal_position = {goal[row][column]: (row, column) for row in range (3) for column in range (3)}
 
-        total = 0
+        numMisplaced = 9
         for row in range(3):
             for column in range (3):
-                tile = state.cells[row][column]
-                if tile != 0:
-                    total = total + manhattanDistance((row, column), goal_position[tile])
-
+                if  goal[row][column] == state.cells[row][column]:
+                    numMisplaced = numMisplaced - 1
+        return numMisplaced
 
 
     problem.isGoalState()
