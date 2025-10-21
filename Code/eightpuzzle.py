@@ -267,8 +267,8 @@ if __name__ == '__main__':
     print(puzzle)
 
     problem = EightPuzzleSearchProblem(puzzle)
-    path = search.uniformCostSearch(problem)
-    print('BFS found a path of %d moves: %s' % (len(path), str(path)))
+    path = search.iterativeDeepeningSearch(problem)
+    print('IDS found a path of %d moves: %s' % (len(path), str(path)))
     curr = puzzle
     i = 1
     for a in path:

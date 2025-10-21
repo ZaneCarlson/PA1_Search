@@ -18,7 +18,7 @@ Pacman agents (in searchAgents.py).
 """
 
 import util
-from Code.util import manhattanDistance
+from util import manhattanDistance
 
 
 class SearchProblem:
@@ -126,14 +126,13 @@ def depthFirstSearch(problem: SearchProblem):
 
 
         # Successor puzzle, the next action i.e. 'down' 'left' ect, and cost step (always 1) is returned from problem.getSuccessorss(currentState)
+
         for (Successor, action, stepCost) in problem.getSuccessors(currentState):
             if Successor not in visited:
                 visited.add(Successor)
                 parent[Successor] = (currentState, action)
                 stack.push(Successor)
     return []
-
-    util.raiseNotDefined()
 
 def breadthFirstSearch(problem: SearchProblem):
     """Search the shallowest nodes in the search tree first."""
@@ -185,7 +184,54 @@ def breadthFirstSearch(problem: SearchProblem):
                 Que.push(Successor)
     return []
 
-    util.raiseNotDefined()
+
+def iterativeDeepeningSearch(problem: SearchProblem):
+
+    from util import Stack
+    print("Start:", problem.getStartState())
+    print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
+    print("Start's successors:", problem.getSuccessors(problem.getStartState()))   
+
+    startState = problem.getStartState()
+    startState = problem.getStartState()
+    if problem.isGoalState(startState):
+        print("The Start State is the end state - somehow")
+        return []  # is done if somehow the start state is also the end state
+    depthLimit = 0
+    while(depthLimit < 10000):
+        stack = Stack() # Empty LIFO queue
+        stack.push((startState, 0))
+
+        # To keep track of what has been explored
+        parent = {
+            startState: (None, None) # (startState is the key : --> (previous state, action to reach state))
+        } #
+
+        # The Main DLS logic loop: Keep expanding the last state in stack until you reach the goal or hit the limit.
+        while not stack.isEmpty():
+            currentState, depth = stack.pop() # (set of nodes we've discovered but haven't expanded yet) S.pop() --> expand a state and remove it from the Que
+
+            if problem.isGoalState(currentState): # if this state is the goal
+                actions = [] # list of actions taken to get to goal state
+                current = currentState
+                while parent[current][0] is not None:
+                    prev, act = parent[current] # unpack ( previous state, action taken)
+                    actions.append(act)
+                    current = prev
+                actions.reverse()
+                return actions
+
+
+            # Successor puzzle, the next action i.e. 'down' 'left' ect, and cost step (always 1) is returned from problem.getSuccessorss(currentState)
+            if depth < depthLimit:
+                for (Successor, action, stepCost) in problem.getSuccessors(currentState):
+                    if Successor not in parent:
+                        parent[Successor] = (currentState, action)
+                        stack.push((Successor, depth + 1))
+
+        depthLimit = depthLimit + 1
+    return []
+
 
 def uniformCostSearch(problem: SearchProblem):
     """Search the node of least total cost first."""
