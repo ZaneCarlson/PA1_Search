@@ -262,7 +262,41 @@ def createRandomEightPuzzle(moves=100):
         puzzle = puzzle.result(random.sample(puzzle.legalMoves(), 1)[0])
     return puzzle
 
+
+import argparse
+import ast
+import os
+from typing import List, Tuple
+
+
+
+
+def parse_clean(state: str) -> List[List[int]]:
+    cleaned = state.replace('-', '0')
+    board = ast.literal_eval(cleaned)
+    return board
+
 if __name__ == '__main__':
+
+    # Setting required keywords in command.
+    parseCommand = argparse.ArgumentParser(description="8-puzzle runner")
+    parseCommand.add_argument('--search', required=True)
+    parseCommand.add_argument('--initial')
+    parseCommand.add_argument('--goal', required=True)
+    parseCommand.add_argument('--heuristic', default="")
+    args = parseCommand.parse_args()
+
+    # make it so [-,7,3] is now [0,7,3]
+    initial = parse_clean(args.initial)
+    goal = parse_clean(args.goal)
+
+
+    # split the lists
+    searches = [s.strip() for s in args.search.split('/') if s.strip()] #"BFS/DFS/IDS" into ["BFS", "DFS", "IDS"]
+    heuristics = [h.strip() for h in args.heuristic.split('/') if h.strip()] if args.heuristic else [""]
+
+
+
     puzzle = EightPuzzleState([0,2,3,1,4,5,8,7,6])
     print(puzzle)
 
@@ -284,5 +318,5 @@ if __name__ == '__main__':
         print('After %d move%s: %s' % (i, ("", "s")[i>1], a))
         print(curr)
 
-        input("Press return for the next state...")   # wait for key stroke
+        #input("Press return for the next state...")   # wait for key stroke
         i += 1
