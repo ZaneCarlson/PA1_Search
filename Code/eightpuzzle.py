@@ -196,7 +196,7 @@ class EightPuzzleSearchProblem(search.SearchProblem):
         self.puzzle = puzzle
 
     def getStartState(self):
-        return puzzle
+        return self.puzzle
 
     def isGoalState(self,state):
         return state.isGoal()
@@ -262,61 +262,185 @@ def createRandomEightPuzzle(moves=100):
         puzzle = puzzle.result(random.sample(puzzle.legalMoves(), 1)[0])
     return puzzle
 
-
 import argparse
 import ast
 import os
 from typing import List, Tuple
 
-
-
-
-def parse_clean(state: str) -> List[List[int]]:
-    cleaned = state.replace('-', '0')
+def parse_board(board_str: str) -> List[List[int]]:
+    """
+    Accepts strings like: '[[-,2,3],[1,4,5],[8,7,6]]' or '[[-, 2, 3], [1, 4, 5], [8, 7, 6]]'
+    Converts '-' to 0 and returns a 3x3 list of ints.
+    """
+    # Replace '-' with 0, then use ast.literal_eval for safety
+    cleaned = board_str.replace('-', '0')
     board = ast.literal_eval(cleaned)
+    # Validate 3x3
+    if not (isinstance(board, list) and len(board) == 3 and all(isinstance(r, list) and len(r) == 3 for r in board)):
+        raise ValueError("Board must be a 3x3 list, e.g. '[[-,2,3],[1,4,5],[8,7,6]]'")
     return board
 
+def flatten(board: List[List[int]]) -> List[int]:
+    return [board[r][c] for r in range(3) for c in range(3)]
+
+def board_equal(a: List[List[int]], b: List[List[int]]) -> bool:
+    return all(a[r][c] == b[r][c] for r in range(3) for c in range(3))
+
+def str_path_as_pairs(initial_state: 'EightPuzzleState', actions: List[str]) -> str:
+    """
+    Returns '(s1,a1)->(s2,a2)->...->(sg)' formatting.
+    States are printed as 2D lists (as allowed in the spec).
+    """
+    seq = []
+    curr = initial_state
+    prev_action = None
+    # s1 has no action; we still print (s1, a1) per spec; use 'start' for the first action slot
+    seq.append(f"({curr.cells}, start)")
+    for a in actions:
+        curr = curr.result(a)
+        seq.append(f"({curr.cells}, {a})")
+    return " -> ".join(seq)
+
+def make_output_filename(search_name: str, heuristic_name: str) -> str:
+    # Follow the exact naming convention from the PDF
+    # DFS: output DFS.txt; BFS: output BFS.txt; IDS: output IDS.txt; UCS: output UCS.txt
+    # GBS, misplaced: output GBS misplaced.txt; GBS, manhattan: output GBS manhattan.txt; GBS, other: output GBS other.txt
+    # A*, misplaced: output A* misplaced.txt; etc.
+    base = search_name
+    if search_name in ("GBS", "Astar") and heuristic_name:
+        return f"output {base} {heuristic_name}.txt"
+    else:
+        return f"output {base}.txt"
+
+def make_problem(start_board: List[List[int]], goal_board: List[List[int]]) -> 'EightPuzzleSearchProblem':
+    # Patch the problem class so it knows the goal we want to use.
+    class EightPuzzleProblemWithGoal(EightPuzzleSearchProblem):
+        def __init__(self, puzzle, goal):
+            super().__init__(puzzle)
+            self.goal = goal  # 2D list
+
+        def isGoalState(self, state):
+            return board_equal(state.cells, self.goal)
+    return EightPuzzleProblemWithGoal(EightPuzzleState(flatten(start_board)), goal_board)
+
+def make_heuristics(goal_board: List[List[int]]):
+    # Rebuild heuristics that use the provided goal instead of a hardcoded one.
+    goal_pos = {goal_board[r][c]: (r, c) for r in range(3) for c in range(3)}
+
+    def misplaced(state, problem=None):
+        cnt = 0
+        for r in range(3):
+            for c in range(3):
+                v = state.cells[r][c]
+                if v != 0 and (r, c) != goal_pos[v]:
+                    cnt += 1
+        return cnt
+
+    def manhattan(state, problem=None):
+        total = 0
+        for r in range(3):
+            for c in range(3):
+                v = state.cells[r][c]
+                if v != 0:
+                    gr, gc = goal_pos[v]
+                    total += abs(r - gr) + abs(c - gc)
+        return total
+
+    def other(state, problem=None):
+        # Simple weighted combo (you can customize for your “other” heuristic)
+        m1 = misplaced(state, problem)
+        m2 = manhattan(state, problem)
+        return m2 + 0.1 * m1
+
+    return {"misplaced": misplaced, "manhattan": manhattan, "other": other}
+
+def run_and_write(search_name: str,
+                  heuristic_name: str,
+                  problem: 'EightPuzzleSearchProblem',
+                  heur_map,
+                  start_state: 'EightPuzzleState'):
+    # Map search name to function
+    search_name = search_name.upper()
+    if search_name == "BFS":
+        runner = search.breadthFirstSearch
+        heur_fn = None
+    elif search_name == "DFS":
+        runner = search.depthFirstSearch
+        heur_fn = None
+    elif search_name == "IDS":
+        runner = search.iterativeDeepeningSearch
+        heur_fn = None
+    elif search_name == "UCS":
+        runner = search.uniformCostSearch
+        heur_fn = None
+    elif search_name in ("GBS", "ASTAR"):
+        # require heuristic
+        if heuristic_name not in heur_map:
+            raise ValueError(f"{search_name} requires a heuristic in {list(heur_map.keys())}")
+        heur_fn = heur_map[heuristic_name]
+        runner = search.greedyBestFirstSearch if search_name == "GBS" else search.aStarSearch
+    else:
+        raise ValueError(f"Unknown search: {search_name}")
+
+    # Run + time
+    t0 = time.time()
+    if heur_fn:
+        actions, cost, depth, expanded = runner(problem, heuristic=heur_fn)
+    else:
+        actions, cost, depth, expanded = runner(problem)
+    dt = time.time() - t0
+
+    # Path string
+    path_str = str_path_as_pairs(start_state, actions)
+
+    # Write output file per spec
+    out_name = make_output_filename(search_name, heuristic_name)
+    with open(out_name, "w", encoding="utf-8") as f:
+        f.write(f"{search_name}\n")
+        f.write("**********\n")
+        f.write(f"Path: {path_str}\n")
+        f.write(f"Path cost: {cost}\n")
+        f.write(f"Depth: {depth}\n")
+        f.write(f"Time (s): {dt:.6f}\n")
+        f.write(f"Nodes expanded: {expanded}\n")
+
+    return out_name, (cost, depth, dt, expanded)
+
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="8-puzzle runner")
+    parser.add_argument('--search', required=True,
+                        help='Slash-separated list like "BFS/DFS/IDS/UCS/GBS/A*/Beam" (Beam optional)')
+    parser.add_argument('--initial', required=True,
+                        help="e.g. '[[-,2,3],[1,4,5],[8,7,6]]' (use '-' for blank)")
+    parser.add_argument('--goal', required=True,
+                        help="e.g. '[[1,2,3],[8,-,4],[7,6,5]]'")
+    parser.add_argument('--heuristic', default="",
+                        help='For GBS/A*: "misplaced/manhattan/other" (can be slash-separated to run multiple).')
+    args = parser.parse_args()
 
-    # Setting required keywords in command.
-    parseCommand = argparse.ArgumentParser(description="8-puzzle runner")
-    parseCommand.add_argument('--search', required=True)
-    parseCommand.add_argument('--initial')
-    parseCommand.add_argument('--goal', required=True)
-    parseCommand.add_argument('--heuristic', default="")
-    args = parseCommand.parse_args()
+    start_board = parse_board(args.initial)
+    goal_board  = parse_board(args.goal)
 
-    # make it so [-,7,3] is now [0,7,3]
-    initial = parse_clean(args.initial)
-    goal = parse_clean(args.goal)
+    # Build problem with your chosen start/goal
+    problem = make_problem(start_board, goal_board)
+    start_state = problem.puzzle  # convenience
 
+    heur_map = make_heuristics(goal_board)
 
-    # split the lists
-    searches = [s.strip() for s in args.search.split('/') if s.strip()] #"BFS/DFS/IDS" into ["BFS", "DFS", "IDS"]
+    # Split selections
+    searches = [s.strip() for s in args.search.split('/') if s.strip()]
     heuristics = [h.strip() for h in args.heuristic.split('/') if h.strip()] if args.heuristic else [""]
 
+    # Run everything requested
+    summary_rows = []
+    made_files = []
 
-
-    puzzle = EightPuzzleState([0,2,3,1,4,5,8,7,6])
-    print(puzzle)
-
-    problem = EightPuzzleSearchProblem(puzzle)
-    start = time.time()
-    path, cost, depth, numExpanded = search.depthFirstSearch(problem)
-    end = time.time()
-    timeTaken = end - start
-
-    print('IDS found a path of %d moves: %s' % (len(path), str(path)))
-    print('Path cost is ' + str(cost))
-    print('Depth of goal is ' + str(depth))
-    print('Number of nodes expanded is ' + str(numExpanded))
-    print('Time taken: ' + str(timeTaken))
-    curr = puzzle
-    i = 1
-    for a in path:
-        curr = curr.result(a)
-        print('After %d move%s: %s' % (i, ("", "s")[i>1], a))
-        print(curr)
-
-        #input("Press return for the next state...")   # wait for key stroke
-        i += 1
+    for sname in searches:
+        if sname.upper() in ("GBS", "Astar"):
+            to_run = heuristics
+        else:
+            to_run = [""]  # no heuristic used
+        for hname in to_run:
+            outfile, metrics = run_and_write(sname, hname, problem, heur_map, start_state)
+            made_files.append(outfile)
+            summary_rows.append((sname, hname or "-",) + metrics)
