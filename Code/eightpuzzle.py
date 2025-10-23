@@ -307,7 +307,7 @@ def make_output_filename(search_name: str, heuristic_name: str) -> str:
     # GBS, misplaced: output GBS misplaced.txt; GBS, manhattan: output GBS manhattan.txt; GBS, other: output GBS other.txt
     # A*, misplaced: output A* misplaced.txt; etc.
     base = search_name
-    if search_name in ("GBS", "Astar") and heuristic_name:
+    if search_name in ("GBS", "ASTAR") and heuristic_name:
         return f"output {base} {heuristic_name}.txt"
     else:
         return f"output {base}.txt"
@@ -436,7 +436,8 @@ if __name__ == '__main__':
     made_files = []
 
     for sname in searches:
-        if sname.upper() in ("GBS", "Astar"):
+        s_upper = sname.upper()
+        if s_upper in ("GBS", "ASTAR"):
             to_run = heuristics
         else:
             to_run = [""]  # no heuristic used
