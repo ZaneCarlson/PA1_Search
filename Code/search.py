@@ -153,36 +153,32 @@ def breadthFirstSearch(problem: SearchProblem):
     startState = problem.getStartState()
     if problem.isGoalState(startState):
         print("The Start State is the end state - somehow")
-        return [] # is done if somehow the start state is also the end state
+        return []
 
-    Que = Queue() # Empty FIFO queue
+    Que = Queue()
     Que.push((startState, 0, 0))
     numExpandedNodes = 0
 
     visited = {startState}
 
-    # To keep track of what has been explored
     parent = {
-        startState: (None, None) # (startState is the key : --> (previous state, action to reach state))
-    } #
+        startState: (None, None)
+    }
 
-    # The Main BFS logic loop: Keep expanding until no states remain in the Queue
     while not Que.isEmpty():
-        currentState, currentCost, currentDepth = Que.pop() # (set of nodes we've discovered but haven't expanded yet) Q.pop() --> expand a state and remove it from the Que
+        currentState, currentCost, currentDepth = Que.pop()
         numExpandedNodes += 1
 
-        if problem.isGoalState(currentState): # if this state is the goal
-            actions = [] # list of actions taken to get to goal state
+        if problem.isGoalState(currentState):
+            actions = []
             current = currentState
             while parent[current][0] is not None:
-                prev, act = parent[current] # unpack ( previous state, action taken)
+                prev, act = parent[current]
                 actions.append(act)
                 current = prev
             actions.reverse()
             return (actions, currentCost, currentDepth, numExpandedNodes)
 
-
-        # Successor puzzle, the next action i.e. 'down' 'left' ect, and cost step (always 1) is returned from problem.getSuccessorss(currentState)
         for (Successor, action, stepCost) in problem.getSuccessors(currentState):
             if Successor not in visited:
                 newCost = currentCost + stepCost
@@ -204,36 +200,31 @@ def iterativeDeepeningSearch(problem: SearchProblem):
     startState = problem.getStartState()
     if problem.isGoalState(startState):
         print("The Start State is the end state - somehow")
-        return []  # is done if somehow the start state is also the end state
+        return ([], 0, 0, 0)
     depthLimit = 0
     numExpandedNodes = 0
     while(depthLimit < 10000):
-        stack = Stack() # Empty LIFO queue
+        stack = Stack()
         stack.push((startState, 0, 0))
 
-
-        # To keep track of what has been explored
         parent = {
-            startState: (None, None) # (startState is the key : --> (previous state, action to reach state))
+            startState: (None, None)
         }
 
-        # The Main DLS logic loop: Keep expanding the last state in stack until you reach the goal or hit the limit.
         while not stack.isEmpty():
-            currentState, currentCost, currentDepth = stack.pop() # (set of nodes we've discovered but haven't expanded yet) S.pop() --> expand a state and remove it from the Que
+            currentState, currentCost, currentDepth = stack.pop()
             numExpandedNodes += 1
 
-            if problem.isGoalState(currentState): # if this state is the goal
-                actions = [] # list of actions taken to get to goal state
+            if problem.isGoalState(currentState):
+                actions = []
                 current = currentState
                 while parent[current][0] is not None:
-                    prev, act = parent[current] # unpack ( previous state, action taken)
+                    prev, act = parent[current]
                     actions.append(act)
                     current = prev
                 actions.reverse()
                 return (actions, currentCost, newDepth, numExpandedNodes)
 
-
-            # Successor puzzle, the next action i.e. 'down' 'left' ect, and cost step (always 1) is returned from problem.getSuccessorss(currentState)
             if currentDepth < depthLimit:
                 for (Successor, action, stepCost) in problem.getSuccessors(currentState):
                     if Successor not in parent:
@@ -260,35 +251,32 @@ def uniformCostSearch(problem: SearchProblem):
     startState = problem.getStartState()
     if problem.isGoalState(startState):
         print("The Start State is the end state - somehow")
-        return ([], 0, 0, 0)  # is done if somehow the start state is also the end state
+        return ([], 0, 0, 0) 
 
-    priorityQueue = PriorityQueue()  # Empty Pripority queue
+    priorityQueue = PriorityQueue() 
     priorityQueue.push((startState, 0, 0), 0)
     numExpandedNodes = 0
 
     # To keep track of what has been explored
     parent = {
-        startState: (None, None)  # (startState is the key : --> (previous state, action to reach state))
+        startState: (None, None) 
     } 
     costSoFar = {
         startState: 0
     }
 
-    # The Main BFS logic loop: Keep expanding until no states remain in the Queue
     while not priorityQueue.isEmpty():
-        currentState, currentCost, currentDepth = priorityQueue.pop()  # (set of nodes we've discovered but haven't expanded yet) Q.pop() --> expand a state and remove it from the Que
-        numExpandedNodes += 1
+        currentState, currentCost, currentDepth = priorityQueue.pop()
         
-        if problem.isGoalState(currentState):  # if this state is the goal
-            actions = []  # list of actions taken to get to goal state
+        if problem.isGoalState(currentState): 
+            actions = []
             while parent[currentState][0] is not None:
-                prev, act = parent[currentState]  # unpack ( previous state, action taken, stepCost)
+                prev, act = parent[currentState] 
                 actions.append(act)
                 currentState = prev
             actions.reverse()
             return (actions, currentCost, currentDepth, numExpandedNodes)
 
-        # Successor puzzle, the next action i.e. 'down' 'left' ect, and cost step (always 1) is returned from problem.getSuccessorss(currentState)
         for (Successor, action, stepCost) in problem.getSuccessors(currentState):
             newCost = currentCost + stepCost
             if Successor not in costSoFar or newCost < costSoFar[Successor]:
@@ -311,7 +299,7 @@ def greedyBestFirstSearch(problem: SearchProblem, heuristic=nullHeuristic):
     startState = problem.getStartState()
     if problem.isGoalState(startState):
         print("The Start State is the end state - somehow")
-        return []  # is done if somehow the start state is also the end state
+        return []
 
     priorityQueue = PriorityQueue()
     priorityQueue.push((startState, 0, 0), heuristic(startState, problem))
@@ -319,7 +307,7 @@ def greedyBestFirstSearch(problem: SearchProblem, heuristic=nullHeuristic):
     visited = set()
 
     parent = {
-        startState: (None, None)  # (startState is the key : --> (previous state, action to reach state))
+        startState: (None, None)
     }
 
     while not priorityQueue.isEmpty():
@@ -330,16 +318,15 @@ def greedyBestFirstSearch(problem: SearchProblem, heuristic=nullHeuristic):
             continue
         visited.add(currentState)
 
-        if problem.isGoalState(currentState):  # if this state is the goal
-            actions = []  # list of actions taken to get to goal state
+        if problem.isGoalState(currentState):
+            actions = [] 
             while parent[currentState][0] is not None:
-                prev, act = parent[currentState]  # unpack ( previous state, action taken, stepCost)
+                prev, act = parent[currentState]
                 actions.append(act)
                 currentState = prev
             actions.reverse()
             return (actions, currentCost, currentDepth, numExpandedNodes)
 
-                # Successor puzzle, the next action i.e. 'down' 'left' ect, and cost step (always 1) is returned from problem.getSuccessorss(currentState)
         for (Successor, action, stepCost) in problem.getSuccessors(currentState):
             
             if Successor not in visited:
@@ -367,34 +354,31 @@ def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
     startState = problem.getStartState()
     if problem.isGoalState(startState):
         print("The Start State is the end state - somehow")
-        return []  # is done if somehow the start state is also the end state
+        return []
 
-    priorityQueue = PriorityQueue()  # Empty Pripority queue
+    priorityQueue = PriorityQueue()
     priorityQueue.push((startState, 0, 0), 0)
     numExpandedNodes = 0
 
-    # To keep track of what has been explored
     parent = {
-        startState: (None, None)  # (startState is the key : --> (previous state, action to reach state))
+        startState: (None, None)
     } 
     costSoFar = {
         startState: 0
     }
 
-    # The Main BFS logic loop: Keep expanding until no states remain in the Queue
     while not priorityQueue.isEmpty():
-        currentState, currentCost, currentDepth = priorityQueue.pop()  # (set of nodes we've discovered but haven't expanded yet) Q.pop() --> expand a state and remove it from the Que
+        currentState, currentCost, currentDepth = priorityQueue.pop()
         numExpandedNodes += 1
-        if problem.isGoalState(currentState):  # if this state is the goal
-            actions = []  # list of actions taken to get to goal state
+        if problem.isGoalState(currentState):
+            actions = []
             while parent[currentState][0] is not None:
-                prev, act = parent[currentState]  # unpack ( previous state, action taken, stepCost)
+                prev, act = parent[currentState]
                 actions.append(act)
                 currentState = prev
             actions.reverse()
             return (actions, currentCost, currentDepth, numExpandedNodes)
 
-        # Successor puzzle, the next action i.e. 'down' 'left' ect, and cost step (always 1) is returned from problem.getSuccessorss(currentState)
         for (Successor, action, stepCost) in problem.getSuccessors(currentState):
             newCost = currentCost + stepCost
             if Successor not in costSoFar or newCost< costSoFar[Successor]:
